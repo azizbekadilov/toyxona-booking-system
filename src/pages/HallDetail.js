@@ -1,35 +1,91 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 function HallDetail() {
 
-  const [selectedDate, setSelectedDate] = useState("");
+  const { id } = useParams();
+
+  const [selectedDate, setSelectedDate] = useState(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [guests, setGuests] = useState("");
   const [message, setMessage] = useState("");
 
-  const hall = {
-    name: "Grand Saroy",
-    district: "Chilonzor",
-    capacity: 300,
-    price: 100000,
-    phone: "+998901234567"
-  };
+  const halls =
+    JSON.parse(localStorage.getItem("halls")) || [];
+
+  const hall = halls.find((h) => h.id === id);
+
+  if (!hall) {
+    return <h1>To'yxona topilmadi</h1>;
+  }
 
   const handleBooking = (e) => {
 
     e.preventDefault();
 
+    // ❗ sana tanlanmagan
     if (!selectedDate) {
-      setMessage("Iltimos avval sana tanlang");
+      setMessage("Iltimos sana tanlang");
       return;
     }
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    // ❌ o‘tgan sana
+    if (selectedDate < today) {
+      setMessage("O‘tgan sanani tanlab bo‘lmaydi");
+      return;
+    }
+
+    // ❌ capacity tekshiruv
+    if (Number(guests) > Number(hall.capacity)) {
+      setMessage(`Maksimal ${hall.capacity} kishi mumkin`);
+      return;
+    }
+
+    const formattedDate = selectedDate.toISOString().split("T")[0];
+
+    const oldBookings =
+      JSON.parse(localStorage.getItem("bookings")) || [];
+
+    // ❌ band sana tekshiruv
+    const isBooked = oldBookings.find(
+    (b) => b.date === formattedDate && b.hallName === hall.name
+    );
+    if (isBooked) {
+      setMessage("Bu sana allaqachon band");
+      return;
+    }
+
+    // ✅ yangi booking
+    const user =
+  JSON.parse(localStorage.getItem("user"));
+
+const newBooking = {
+  hallName: hall.name,
+  name,
+  phone,
+  guests,
+  date: formattedDate, // ✅ MUHIM
+  status: "pending",
+  createdBy: user?.username || "guest"
+};
+
+    localStorage.setItem(
+      "bookings",
+      JSON.stringify([...oldBookings, newBooking])
+    );
 
     setMessage("Booking muvaffaqiyatli yuborildi");
 
     setName("");
     setPhone("");
     setGuests("");
+    setSelectedDate(null);
   };
 
   return (
@@ -41,53 +97,28 @@ function HallDetail() {
       </h1>
 
       <img
-        src="https://picsum.photos/800/400"
-        alt="hall"
+        src={hall.image}
+        alt={hall.name}
         className="rounded-lg mb-4"
       />
 
       <div className="space-y-2 mb-6">
         <p>Rayon: {hall.district}</p>
         <p>Sig‘imi: {hall.capacity}</p>
-        <p>Narxi: {hall.price} so'm</p>
-        <p>Telefon: {hall.phone}</p>
       </div>
 
-      <h2 className="text-2xl font-semibold mb-3">
-        Bo'sh kun tanlang
+      <h2 className="text-xl font-semibold mb-2">
+        Sana tanlang
       </h2>
 
-      <div className="flex gap-3 flex-wrap mb-6">
+      <DatePicker
+        selected={selectedDate}
+        onChange={(date) => setSelectedDate(date)}
+        dateFormat="yyyy-MM-dd"
+        className="border p-2 rounded w-full mb-6"
+      />
 
-        {[
-          "2026-03-20",
-          "2026-03-21",
-          "2026-03-22",
-          "2026-03-23",
-          "2026-03-24"
-        ].map((date) => (
-
-          <button
-            key={date}
-            onClick={() => setSelectedDate(date)}
-            className="bg-gray-200 px-4 py-2 rounded hover:bg-blue-500 hover:text-white"
-          >
-            {date}
-          </button>
-
-        ))}
-
-      </div>
-
-      {selectedDate && (
-
-        <div className="bg-green-100 p-3 rounded mb-6">
-          Tanlangan sana: <b>{selectedDate}</b>
-        </div>
-
-      )}
-
-      <h2 className="text-2xl font-semibold mb-4">
+      <h2 className="text-xl font-semibold mb-2">
         Bron qilish
       </h2>
 
@@ -127,11 +158,9 @@ function HallDetail() {
       </form>
 
       {message && (
-
-        <div className="bg-blue-100 p-3 mt-4 rounded">
+        <div className="bg-yellow-100 p-3 mt-4 rounded">
           {message}
         </div>
-
       )}
 
     </div>

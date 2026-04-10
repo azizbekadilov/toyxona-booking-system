@@ -1,55 +1,49 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function Navbar() {
 
+  const user = JSON.parse(localStorage.getItem("user"));
+  const navigate = useNavigate();
+
   return (
 
-    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow">
+    <div className="bg-gray-900 text-white p-4 flex justify-between">
 
-      <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
+      <h1 className="font-bold">Toyxona App</h1>
 
-        <h1 className="text-2xl font-bold">
-          Toyxona Booking
-        </h1>
+      <div className="space-x-4">
 
-        <div className="space-x-6">
+        {/* USER */}
+        {user?.role === "user" && (
+          <>
+            <Link to="/">Home</Link>
+            <Link to="/owner">Owner Panel</Link>
+          </>
+        )}
 
-          <Link
-            to="/"
-            className="hover:text-gray-200"
-          >
-            Home
-          </Link>
+        {/* ADMIN */}
+        {user?.role === "admin" && (
+          <>
+            <Link to="/admin">Admin Panel</Link>
+            <Link to="/owner">Owner Panel</Link>
+          </>
+        )}
 
-          <Link
-            to="/hall"
-            className="hover:text-gray-200"
-          >
-            Hall
-          </Link>
-
-          <Link
-            to="/admin"
-            className="hover:text-gray-200"
-          >
-            Admin
-          </Link>
-
-          <Link
-            to="/owner"
-            className="hover:text-gray-200"
-          >
-            Owner
-          </Link>
-
-        </div>
+        {/* LOGOUT */}
+        <button
+          onClick={() => {
+            localStorage.removeItem("user");
+            navigate("/login");
+          }}
+        >
+          Logout
+        </button>
 
       </div>
 
     </div>
 
   );
-
 }
 
 export default Navbar;

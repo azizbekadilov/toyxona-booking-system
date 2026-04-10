@@ -1,99 +1,142 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function OwnerPanel() {
 
+  const [bookings, setBookings] = useState([]);
+  const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
 
-  const bookings = [
-    {
-      id: 1,
-      name: "Ali",
-      phone: "901111111",
-      guests: 150,
-      date: "2026-04-10",
-      status: "pending"
-    },
-    {
-      id: 2,
-      name: "Vali",
-      phone: "902222222",
-      guests: 200,
-      date: "2026-05-12",
-      status: "approved"
-    }
-  ];
+  useEffect(() => {
+    const data =
+      JSON.parse(localStorage.getItem("bookings")) || [];
+    setBookings(data);
+  }, []);
 
-  const filtered = bookings.filter((b) =>
-    b.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const updateStatus = (index, status) => {
+    const updated = [...bookings];
+    updated[index].status = status;
+    setBookings(updated);
+    localStorage.setItem("bookings", JSON.stringify(updated));
+  };
+
+  // 🔍 SEARCH + FILTER
+  const filteredBookings = bookings.filter((b) => {
+
+    const matchSearch =
+      b.name.toLowerCase().includes(search.toLowerCase()) ||
+      b.phone.includes(search);
+
+    const matchFilter =
+      filter === "all" ? true : b.status === filter;
+
+    return matchSearch && matchFilter;
+  });
 
   return (
 
     <div className="max-w-6xl mx-auto p-6">
 
       <h1 className="text-3xl font-bold mb-6">
-        Owner Booking Panel
+        Admin Panel
       </h1>
 
+      {/* 🔍 SEARCH */}
       <input
         type="text"
-        placeholder="Search booking..."
+        placeholder="Ism yoki telefon orqali qidirish..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="border p-2 mb-4 w-full rounded"
+        className="border p-3 w-full mb-4 rounded"
       />
 
-      <table className="w-full border shadow-lg rounded-lg overflow-hidden">
+      {/* FILTER */}
+      <div className="mb-4 space-x-2">
 
-        <thead className="bg-blue-600 text-white">
+        <button onClick={() => setFilter("all")} className="bg-gray-300 px-3 py-1 rounded">
+          All
+        </button>
 
-          <tr>
-            <th className="p-3">Name</th>
-            <th className="p-3">Phone</th>
-            <th className="p-3">Guests</th>
-            <th className="p-3">Date</th>
-            <th className="p-3">Status</th>
-            <th className="p-3">Action</th>
-          </tr>
+        <button onClick={() => setFilter("pending")} className="bg-yellow-400 px-3 py-1 rounded">
+          Pending
+        </button>
 
-        </thead>
+        <button onClick={() => setFilter("approved")} className="bg-green-500 text-white px-3 py-1 rounded">
+          Approved
+        </button>
 
-        <tbody>
+        <button onClick={() => setFilter("rejected")} className="bg-red-500 text-white px-3 py-1 rounded">
+          Rejected
+        </button>
 
-          {filtered.map((b) => (
+      </div>
 
-            <tr key={b.id} className="border-b text-center">
+      <div className="bg-white shadow rounded overflow-hidden">
 
-              <td className="p-3">{b.name}</td>
-              <td className="p-3">{b.phone}</td>
-              <td className="p-3">{b.guests}</td>
-              <td className="p-3">{b.date}</td>
-              <td className="p-3">{b.status}</td>
+        <table className="w-full">
 
-              <td className="p-3">
+          <thead className="bg-gray-800 text-white">
 
-                <button className="bg-green-500 text-white px-3 py-1 rounded mr-2 hover:bg-green-600">
-                  Approve
-                </button>
-
-                <button className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
-                  Reject
-                </button>
-
-              </td>
-
+            <tr>
+              <th className="p-3">User</th>
+              <th className="p-3">Ism</th>
+              <th className="p-3">Telefon</th>
+              <th className="p-3">Mehmonlar</th>
+              <th className="p-3">Sana</th>
+              <th className="p-3">Status</th>
+              <th className="p-3">Action</th>
             </tr>
 
-          ))}
+          </thead>
 
-        </tbody>
+          <tbody>
 
-      </table>
+            {filteredBookings.map((b, index) => (
+
+              <tr key={index} className="text-center border-b">
+                <td className="p-3">{b.createdBy}</td>
+
+                <td className="p-3">{b.name}</td>
+                <td className="p-3">{b.phone}</td>
+                <td className="p-3">{b.guests}</td>
+                <td className="p-3">{b.date}</td>
+
+                <td className="p-3">
+                  {b.status === "pending" && <span className="bg-yellow-300 px-2 py-1 rounded">Pending</span>}
+                  {b.status === "approved" && <span className="bg-green-400 px-2 py-1 rounded text-white">Approved</span>}
+                  {b.status === "rejected" && <span className="bg-red-400 px-2 py-1 rounded text-white">Rejected</span>}
+                </td>
+
+                <td className="p-3 space-x-2">
+
+                  <button
+                    onClick={() => updateStatus(index, "approved")}
+                    className="bg-green-500 text-white px-3 py-1 rounded"
+                  >
+                    Approve
+                  </button>
+
+                  <button
+                    onClick={() => updateStatus(index, "rejected")}
+                    className="bg-red-500 text-white px-3 py-1 rounded"
+                  >
+                    Reject
+                  </button>
+
+                </td>
+
+              </tr>
+
+            ))}
+
+          </tbody>
+
+        </table>
+
+      </div>
 
     </div>
 
   );
-
 }
 
 export default OwnerPanel;

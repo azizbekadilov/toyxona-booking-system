@@ -1,39 +1,81 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
 import Home from "./pages/Home";
 import HallDetail from "./pages/HallDetail";
-import AdminPanel from "./pages/AdminPanel";
-import OwnerPanel from "./pages/OwnerPanel";
+import AdminPanel from "./pages/OwnerPanel";   // booking approve
+import OwnerPanel from "./pages/AdminPanel";   // toyxona CRUD
+import Login from "./pages/Login";
+
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
+
+  const user = JSON.parse(localStorage.getItem("user"));
 
   return (
 
     <Router>
 
-      <Navbar />
+      <div className="flex flex-col min-h-screen">
 
-      <Routes>
+        {user && <Navbar />}
 
-        <Route path="/" element={<Home />} />
+        <div className="flex-grow">
 
-        <Route path="/hall" element={<HallDetail />} />
+          <Routes>
 
-        <Route path="/admin" element={<AdminPanel />} />
+            <Route
+              path="/"
+              element={
+                user ? <Home /> : <Navigate to="/login" />
+              }
+            />
 
-        <Route path="/owner" element={<OwnerPanel />} />
+            <Route path="/login" element={<Login />} />
 
-      </Routes>
+            <Route
+              path="/hall/:id"
+              element={
+                <ProtectedRoute>
+                  <HallDetail />
+                </ProtectedRoute>
+              }
+            />
 
-      <Footer />
+            {/* OWNER */}
+            <Route
+              path="/owner"
+              element={
+                <ProtectedRoute>
+                  <OwnerPanel />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ADMIN */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute role="admin">
+                  <AdminPanel />
+                </ProtectedRoute>
+              }
+            />
+
+          </Routes>
+
+        </div>
+
+        {user && <Footer />}
+
+      </div>
 
     </Router>
 
   );
-
 }
 
 export default App;

@@ -1,11 +1,13 @@
 import { Navigate } from "react-router-dom";
 
-function ProtectedRoute({ children }) {
+function ProtectedRoute({ children, role }) {
 
-  const isAdmin = true; // keyin backend bilan tekshiriladi
+  const user = JSON.parse(localStorage.getItem("user"));
 
-  if (!isAdmin) {
-    return <Navigate to="/hall/1" />;
+  if (!user) return <Navigate to="/login" />;
+
+  if (role && user.role !== role) {
+    return <Navigate to="/" />;
   }
 
   return children;
